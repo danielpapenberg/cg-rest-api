@@ -1,7 +1,10 @@
 import axios from 'axios';
 import fs from 'fs';
+import path from 'path';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { PriceData } from '../../types/priceData';
+
+const dataFilePath = path.join(process.cwd(), 'data', 'data.json');
 
 const getPriceData = async () => {
   const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
@@ -11,12 +14,12 @@ const getPriceData = async () => {
     ethereum: response.data.ethereum.usd,
     timestamp: now.toISOString(),
   };
-  fs.writeFileSync('./data/data.json', JSON.stringify(priceData));
+  fs.writeFileSync(dataFilePath, JSON.stringify(priceData));
   return priceData;
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<PriceData>) {
-  const data = fs.readFileSync('./data/data.json').toString();
+  const data = fs.readFileSync(dataFilePath).toString();
   const priceData: PriceData = JSON.parse(data);
   const now = new Date();
   const proofDate = new Date(priceData.timestamp);
