@@ -14,8 +14,8 @@ const getPriceData = async (): Promise<PriceData> => {
   const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
   const now = new Date();
   const priceData = {
-    price: response.data.bitcoin.usd,
     name: 'bitcoin',
+    price: response.data.bitcoin.usd.toString(),
     timestamp: now.getTime()
   };
   const connection = await pool.getConnection();
