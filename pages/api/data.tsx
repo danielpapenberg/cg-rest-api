@@ -41,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const now = new Date();
     const thirtySecondsAgo = now.getTime() - 30 * 1000; // 30 seconds ago
     if (priceData.timestamp < thirtySecondsAgo) {
-      console.log('jo')
       const newPriceData = await getPriceData();
       res.status(200).json(newPriceData);
     } else {
