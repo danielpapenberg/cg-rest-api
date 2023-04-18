@@ -16,7 +16,7 @@ const getPriceData = async () => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<PriceData>) {
-  const data = fs.readFileSync('./data/data.json');
+  const data = fs.readFileSync('./data/data.json').toString();
   const priceData: PriceData = JSON.parse(data);
   const now = new Date();
   const proofDate = new Date(priceData.timestamp);
