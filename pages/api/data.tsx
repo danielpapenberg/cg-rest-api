@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const connection = await pool.getConnection();
   const sql = 'SELECT * FROM cg_price';
   try {
-    const [rows] = await connection.query(sql);
+    const [rows]:any = await connection.query(sql);
     const priceData: PriceData = rows[0];
     const now = new Date();
     const thirtySecondsAgo = now.getTime() - 30 * 1000; // 30 seconds ago
