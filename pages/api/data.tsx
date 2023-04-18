@@ -1,34 +1,55 @@
 import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import type { NextApiRequest, NextApiResponse } from 'next';
+import mysql from 'mysql2/promise';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { PriceData } from '../../types/priceData';
 
-const dataFilePath = path.join(process.cwd(), 'json', 'data.json');
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASSWORD,
+});
 
-
-const getPriceData = async () => {
+const getPriceData = async (): Promise<PriceData> => {
   const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
   const now = new Date();
-  const priceData: PriceData = {
-    bitcoin: response.data.bitcoin.usd,
-    ethereum: response.data.ethereum.usd,
-    timestamp: now.toISOString(),
+  const priceData = {
+    price: response.data.bitcoin.usd,
+    name: 'bitcoin',
+    timestamp: now.getTime()
   };
-  fs.writeFileSync(dataFilePath, JSON.stringify(priceData));
+  const connection = await pool.getConnection();
+  const sql = 'UPDATE cg_price SET price="' + priceData.price + '", timestamp="' + priceData.timestamp + '" WHERE name="' + priceData.name + '"';
+  try {
+    await connection.query(sql, []);
+    console.log('Inserted new price data into MySQL database.');
+  } catch (error) {
+    console.error(error);
+  } finally {
+    connection.release();
+  }
+
   return priceData;
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<PriceData>) {
-  const data = fs.readFileSync(dataFilePath).toString();
-  const priceData: PriceData = JSON.parse(data);
-  const now = new Date();
-  const proofDate = new Date(priceData.timestamp);
-  const thirtySecondsAgo = now.getTime() - 30 * 1000; // 30 seconds ago
-  if (proofDate.getTime() < thirtySecondsAgo) {
-    const newPriceData = await getPriceData();
-    res.status(200).json(newPriceData);
-  } else {
-    res.status(200).json(priceData);
+  const connection = await pool.getConnection();
+  const sql = 'SELECT * FROM cg_price';
+  try {
+    const [rows] = await connection.query(sql);
+    const priceData: PriceData = rows[0];
+    const now = new Date();
+    const thirtySecondsAgo = now.getTime() - 30 * 1000; // 30 seconds ago
+    if (priceData.timestamp < thirtySecondsAgo) {
+      console.log('jo')
+      const newPriceData = await getPriceData();
+      res.status(200).json(newPriceData);
+    } else {
+      res.status(200).json(priceData);
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    connection.release();
   }
 }

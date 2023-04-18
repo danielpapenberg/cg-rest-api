@@ -1,5 +1,5 @@
 export interface PriceData {
-    bitcoin: number;
-    ethereum: number;
-    timestamp: string;
+    price: number;
+    name: string;
+    timestamp: number;
 }
