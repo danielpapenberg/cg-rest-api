@@ -4,7 +4,7 @@ import path from 'path';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { PriceData } from '../../types/priceData';
 
-const dataFilePath = path.join(process.cwd(), 'data', 'data.json');
+const dataFilePath = path.join(process.cwd(), 'tmp/data', 'data.json');
 
 const getPriceData = async () => {
   const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
